@@ -3,15 +3,8 @@ var cors = require ('cors');
 
 var router = express.Router();
 
-var whitelist = ['https://plataformadigitalnacional.org/']
 var corsOptions = {
-    origin: function (origin, callback) {
-        if (whitelist.indexOf(origin) !== -1) {
-            callback(null, true)
-        } else {
-            callback(new Error('Not allowed by CORS'))
-        }
-    }
+    origin: '*'
 }
 router.use(cors(corsOptions));
 
