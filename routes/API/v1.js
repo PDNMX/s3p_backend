@@ -2,7 +2,7 @@ var express = require('express');
 var cors = require ('cors');
 
 var router = express.Router();
-//router.use(cors());
+router.use(cors());
 
 const endpoints = require('../../endpoints');
 const rest_data = require('./rest_data');
@@ -29,7 +29,7 @@ let makeFiltros = (body)=> {
     return query;
 }
 
-router.post('/entities', cors(), (req, res) => {
+router.post('/entities', (req, res) => {
     // entidades de uno o más proveedores de información
     // las entidades debería traer:
     // nivel de gobierno
@@ -79,7 +79,7 @@ router.post('/entities', cors(), (req, res) => {
 
 });
 
-router.post('/summary', cors(), (req, res)=> {
+router.post('/summary', (req, res)=> {
     // búsqueda general
     const { body } =  req;
     const { nivel_gobierno } = body;
@@ -142,7 +142,7 @@ router.post('/summary', cors(), (req, res)=> {
     });
 });
 
-router.post('/search', cors(), (req, res) => {
+router.post('/search', (req, res) => {
     const { body } = req;
     const { supplier_id } = body;
     let {
