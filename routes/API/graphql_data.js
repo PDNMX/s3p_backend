@@ -119,8 +119,15 @@ const fetchData = (endpoint, options) => {
             query.cve_tipo_sancion.push("I");
         if (query.tipoSancion.includes("M"))
             query.cve_tipo_sancion.push("E");
-        if(query.cve_tipo_sancion.length===0) delete (query.cve_tipo_sancion)
-        if(query.cve_tipo_sancion.length===2) query.cve_tipo_sancion.push("EI")
+        switch (query.cve_tipo_sancion.length){
+            case 0:
+                delete (query.cve_tipo_sancion)
+                break;
+            case 2:
+                query.cve_tipo_sancion.push("EI")
+                break;
+
+        }
         delete (query.tipoSancion)
     }
 
