@@ -13,6 +13,12 @@ const rest = data=>{
             let temporal = tiposSancion.find(e => e.clave === element.clave);
             return temporal ? temporal : element;
         });
+        d.acto = d.acto ? d.acto : leyenda;
+        d.resolucion =  {
+            sentido : d.resolucion && d.resolucion.sentido ? d.resolucion.sentido : leyenda,
+            url :d.resolucion && d.resolucion.url ? d.resolucion.url : leyenda,
+            fechaNotificacion: d.resolucion && d.resolucion.fechaNotificacion ? d.resolucion.fechaNotificacion : leyenda
+        };
         d.multa ={
             monto: d.multa && d.multa.monto ? d.multa.monto : "-",
             moneda: {
@@ -20,11 +26,11 @@ const rest = data=>{
                 valor: d.multa && d.multa.moneda && d.multa.moneda.valor ? d.multa.moneda.valor : leyenda
             }
         };
-        d.inhabilitacion = d.inhabilitacion ? {
-            plazo: d.inhabilitacion.plazo ? d.inhabilitacion.plazo : leyenda,
-            fechaInicial: d.inhabilitacion.fechaInicial ? d.inhabilitacion.fechaInicial : '-',
-            fechaFinal: d.inhabilitacion.fechaFinal ? d.inhabilitacion.fechaFinal : '-'
-        } : leyenda;
+        d.inhabilitacion ={
+            plazo: d. inhabilitacion && d.inhabilitacion.plazo ? d.inhabilitacion.plazo : '-',
+            fechaInicial: d.inhabilitacion && d.inhabilitacion.fechaInicial ? d.inhabilitacion.fechaInicial : '-',
+            fechaFinal: d.inhabilitacion && d.inhabilitacion.fechaFinal ? d.inhabilitacion.fechaFinal : '-'
+        };
         d.observaciones = d.observaciones ? d.observaciones : leyenda
     });
     return data;
