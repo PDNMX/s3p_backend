@@ -13,12 +13,15 @@ const rest = data=>{
             let temporal = tiposSancion.find(e => e.clave === element.clave);
             return temporal ? temporal : element;
         });
-        d.multa = d.multa ? {
-            monto: d.multa.monto ? d.multa.monto : "-",
-            moneda: d.multa.moneda ? {clave:d.multa.moneda, valor: leyenda} : leyenda
-        }:leyenda;
+        d.multa ={
+            monto: d.multa && d.multa.monto ? d.multa.monto : "-",
+            moneda: {
+                clave: d.multa && d.multa.moneda && d.multa.moneda.clave ? d.multa.moneda.clave : leyenda,
+                valor: d.multa && d.multa.moneda && d.multa.moneda.valor ? d.multa.moneda.valor : leyenda
+            }
+        };
         d.inhabilitacion = d.inhabilitacion ? {
-            plazo: leyenda,
+            plazo: d.inhabilitacion.plazo ? d.inhabilitacion.plazo : leyenda,
             fechaInicial: d.inhabilitacion.fechaInicial ? d.inhabilitacion.fechaInicial : '-',
             fechaFinal: d.inhabilitacion.fechaFinal ? d.inhabilitacion.fechaFinal : '-'
         } : leyenda;
