@@ -1,13 +1,28 @@
 const{tiposSancion} = require('./code_lists');
+const leyenda = "Dato no proporcionado";
 
 const rest = data=>{
     data.results.forEach(d=>{
+        d.fechaCaptura = d.fechaCaptura.substring(0,10);
+        d.expediente = d.expediente ? d.expediente : leyenda;
+        d.particularSancionado.objetoSocial = d.particularSancionado.objetoSocial ? d.particularSancionado.objetoSocial : leyenda;
+        d.particularSancionado.tipoPersona = d.particularSancionado.tipoPersona === "F" ? "Física" : (d.particularSancionado.tipoPersona=== "M"? "Moral":leyenda);
+        d.objetoContrato = d.objetoContrato ? d.objetoContrato : leyenda;
+        d.tipoFalta = d.tipoFalta ? d.tipoFalta : leyenda;
         d.tipoSancion = d.tipoSancion.map(element => {
             let temporal = tiposSancion.find(e => e.clave === element.clave);
             return temporal ? temporal : element;
         });
-        d.fechaCaptura = d.fechaCaptura.substring(0,10);
-        d.particularSancionado.tipoPersona = d.particularSancionado.tipoPersona === "F" ? "Física" : (d.particularSancionado.tipoPersona=== "M"? "Moral":leyenda);
+        d.multa = d.multa ? {
+            monto: d.multa.monto ? d.multa.monto : "-",
+            moneda: d.multa.moneda ? {clave:d.multa.moneda, valor: leyenda} : leyenda
+        }:leyenda;
+        d.inhabilitacion = d.inhabilitacion ? {
+            plazo: leyenda,
+            fechaInicial: d.inhabilitacion.fechaInicial ? d.inhabilitacion.fechaInicial : '-',
+            fechaFinal: d.inhabilitacion.fechaFinal ? d.inhabilitacion.fechaFinal : '-'
+        } : leyenda;
+        d.observaciones = d.observaciones ? d.observaciones : leyenda
     });
     return data;
 }
