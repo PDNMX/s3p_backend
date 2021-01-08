@@ -10,9 +10,11 @@ const fetchEntities = endpoint => {
             headers: {
                 'Authorization': 'Bearer ' + access_token
             },
-            json: true
+            json: true,
+            timeout: process.env.TIMEOUT
         };
-        return axios(opts).then(response => response.data)
+        return axios(opts)
+            .then(response => response.data)
             .catch(error => {
                     console.log(error);
                     return [];
@@ -34,7 +36,8 @@ const fetchData = (endpoint, options) => {
                 'Authorization': 'Bearer ' + access_token
             },
             data: options,
-            json: true
+            json: true,
+            timeout: process.env.TIMEOUT
         };
         return axios(opts).then(response => {
             let data = response.data;
@@ -62,7 +65,8 @@ const getToken = endpoint => {
             client_secret: endpoint.client_secret,
             scope: endpoint.scope
         }),
-        json: true
+        json: true,
+        timeout: process.env.TIMEOUT
     };
     return axios(opts);
 };
