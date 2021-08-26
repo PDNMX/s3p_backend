@@ -1,5 +1,5 @@
 var express = require('express');
-var cors = require ('cors');
+var cors = require('cors');
 
 var router = express.Router();
 
@@ -8,12 +8,12 @@ var corsOptions = {
 }
 router.use(cors(corsOptions));
 
-const endpoints = require('../../endpoints');
+const endpoints = require('../../endpoints.json');
 const rest_data = require('./rest_data');
 const graphql_data = require('./graphql_data');
 const formatter = require('./data_transformation');
 
-let makeFiltros = (body)=> {
+let makeFiltros = (body) => {
     const params = [
         'nombreRazonSocial',
         'rfc',
@@ -25,7 +25,7 @@ let makeFiltros = (body)=> {
     let filtros = body.query ? body.query : {};
     let query = {};
 
-    for (const k of params){
+    for (const k of params) {
         if (filtros.hasOwnProperty(k) && typeof filtros[k] !== 'undefined' && filtros[k] !== null && filtros[k] !== '') {
             query[k] = filtros[k];
         }
@@ -49,26 +49,30 @@ router.post('/entities', (req, res) => {
         endpoints_ = endpoints;
     }
 
-    let promises = endpoints_.map( endpoint => {
+    let promises = endpoints_.map(endpoint => {
         if (endpoint.type === 'REST') {
             return rest_data.fetchEntities(endpoint);
-        } else if (endpoint.type === 'GRAPHQL'){
+        } else if (endpoint.type === 'GRAPHQL') {
             return graphql_data.fetchEntities(endpoint)
         }
     });
 
     let entities = [];
     const cfn = (a, b) => {
-        if(a.nombre < b.nombre) { return -1; }
-        if(a.nombre > b.nombre) { return 1; }
+        if (a.nombre < b.nombre) {
+            return -1;
+        }
+        if (a.nombre > b.nombre) {
+            return 1;
+        }
         return 0;
     };
 
-    Promise.all(promises).then( data => {
+    Promise.all(promises).then(data => {
         // asignar supplier_id
         const dl = data.length;
-        for (let i=0; i < dl; i++){
-            if(Array.isArray(data[i])){
+        for (let i = 0; i < dl; i++) {
+            if (Array.isArray(data[i])) {
                 entities = entities.concat(data[i].map(entity => {
                     entity.supplier_id = i;
                     return entity;
@@ -83,50 +87,50 @@ router.post('/entities', (req, res) => {
 
 });
 
-router.post('/summary', (req, res)=> {
+router.post('/summary', (req, res) => {
     // búsqueda general
-    const { body } =  req;
-    const { nivel_gobierno } = body;
+    const {body} = req;
+    const {nivel_gobierno} = body;
 
     let options = {
         page: 1,
         pageSize: 1,
-        query : {}
+        query: {}
     };
 
     options.query = makeFiltros(body);
     //si seleccionó nivel, filtrar endpoints
     let endpoints_ = [];
 
-    if (typeof nivel_gobierno !== 'undefined'&& nivel_gobierno !== null && nivel_gobierno !== ''){
+    if (typeof nivel_gobierno !== 'undefined' && nivel_gobierno !== null && nivel_gobierno !== '') {
         endpoints_ = endpoints.filter(e => e.levels.includes(nivel_gobierno));
     } else {
         endpoints_ = endpoints;
     }
 
-    let queries = endpoints_.map( endpoint => {
+    let queries = endpoints_.map(endpoint => {
         let options_ = JSON.parse(JSON.stringify(options));
-        if (endpoint.type === 'REST'){
-            return rest_data.fetchData(endpoint, options_).catch( error => ({
-                supplier_id: endpoint.supplier_id,
-                supplier_name: endpoint.supplier_name,
-                levels: endpoint.levels,
-                error: true
-            }) );
-        } else if (endpoint.type === 'GRAPHQL'){
-            return graphql_data.fetchData(endpoint, options_).catch( error => (
-                {
+        if (endpoint.type === 'REST') {
+            return rest_data.fetchData(endpoint, options_).catch(error => ({
                 supplier_id: endpoint.supplier_id,
                 supplier_name: endpoint.supplier_name,
                 levels: endpoint.levels,
                 error: true
             }));
+        } else if (endpoint.type === 'GRAPHQL') {
+            return graphql_data.fetchData(endpoint, options_).catch(error => (
+                {
+                    supplier_id: endpoint.supplier_id,
+                    supplier_name: endpoint.supplier_name,
+                    levels: endpoint.levels,
+                    error: true
+                }));
         }
     });
 
-    Promise.all(queries).then( data => {
-        let summary = data.map (d => {
-            if (typeof d.error !== 'undefined'){
+    Promise.all(queries).then(data => {
+        let summary = data.map(d => {
+            if (typeof d.error !== 'undefined') {
                 return d;
             } else {
                 return {
@@ -147,18 +151,18 @@ router.post('/summary', (req, res)=> {
 });
 
 router.post('/search', (req, res) => {
-    const { body } = req;
-    const { supplier_id } = body;
+    const {body} = req;
+    const {supplier_id} = body;
     let {
         page,
         pageSize
-    } =  body;
+    } = body;
 
-    if (typeof page === 'undefined' || page === null || isNaN(page)){
+    if (typeof page === 'undefined' || page === null || isNaN(page)) {
         page = 1;
     }
 
-    if (typeof pageSize === 'undefined' || pageSize === null || isNaN(pageSize)){
+    if (typeof pageSize === 'undefined' || pageSize === null || isNaN(pageSize)) {
         pageSize = 10;
     }
 
@@ -176,21 +180,48 @@ router.post('/search', (req, res) => {
     if (endpoint.type === 'REST') {
         rest_data.fetchData(endpoint, options).then(data => {
             res.json(formatter.rest(data));
-        }).catch( e => {
+        }).catch(e => {
             console.log(e);
             res.status(500).json({
                 error: "Algo salio mal..."
             });
         });
-    } else if (endpoint.type === 'GRAPHQL'){
+    } else if (endpoint.type === 'GRAPHQL') {
         graphql_data.fetchData(endpoint, options).then(data => {
             res.json(formatter.sfp(data));
-        }).catch( e => {
+        }).catch(e => {
             console.log(e);
             res.status(500).json({
                 error: "Algo salio mal"
             });
         });
+    }
+
+});
+
+router.post('/downloadData', async (req, res) => {
+    const {body} = req;
+    const {supplier_id} = body;
+    let zip;
+
+    let endpoint = endpoints.find(d => d.supplier_id === supplier_id);
+
+    let options = {
+        pageSize: 200,
+        query: makeFiltros(body),
+        sort: body.sort,
+        page: 1
+    };
+    try {
+        if (endpoint.type === 'REST') {
+            zip = await rest_data.getBulk(endpoint, options);
+        } else if (endpoint.type === 'GRAPHQL') {
+            zip = await graphql_data.getBulk(endpoint, options);
+        }
+        res.status(200).send(zip)
+    } catch (error) {
+        console.error(error)
+        res.status(500).send("Error al generarl el bulk")
     }
 
 });
