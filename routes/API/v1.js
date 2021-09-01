@@ -12,6 +12,8 @@ const endpoints = require('../../endpoints.json');
 const rest_data = require('./rest_data');
 const graphql_data = require('./graphql_data');
 const formatter = require('./data_transformation');
+const {Errback} = require("express-serve-static-core");
+const fs = require("fs");
 
 let makeFiltros = (body) => {
     const params = [
@@ -202,23 +204,33 @@ router.post('/search', (req, res) => {
 router.post('/downloadData', async (req, res) => {
     const {body} = req;
     const {supplier_id} = body;
-    let zip;
-
+    let nameFileZip;
     let endpoint = endpoints.find(d => d.supplier_id === supplier_id);
-
     let options = {
         pageSize: 200,
         query: makeFiltros(body),
         sort: body.sort,
         page: 1
     };
+
     try {
         if (endpoint.type === 'REST') {
-            zip = await rest_data.getBulk(endpoint, options);
+            nameFileZip = await rest_data.getBulk(endpoint, options);
+            let pathZip = `./${nameFileZip}.zip`;
+            console.log(`pathFile: ${pathZip}`)
+            res.download(`./a08105e9-d80c-418d-9333-a28b4b4203b8.zip`, (Errback)=>{
+                if(Errback){
+                    console.log(Errback)
+                    console.log('un error')
+                }
+                console.log('termine');
+                fs.rmdirSync(`./${nameFileZip}`,{recursive:true});
+
+            });
         } else if (endpoint.type === 'GRAPHQL') {
-            zip = await graphql_data.getBulk(endpoint, options);
+            nameFileZip = await graphql_data.getBulk(endpoint, options);
         }
-        res.status(200).send(zip)
+        //res.status(200).send(zip)
     } catch (error) {
         console.error(error)
         res.status(500).send("Error al generarl el bulk")

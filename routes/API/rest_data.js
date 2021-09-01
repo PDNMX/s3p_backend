@@ -3,7 +3,7 @@ const qs = require('qs');
 const fs = require("fs");
 const {v4: uuidv4} = require('uuid');
 import generateZipForPath from "../utils/generateZipForPath";
-
+const {exec} = require("child_process");
 //En caso de error regresa un arreglo vacio para no interrumpir el flujo de las demás promises
 const fetchEntities = endpoint => {
     return getToken(endpoint).then(token_data => {
@@ -90,8 +90,8 @@ const itera = (endpoint,options, idFile) => {
             options.page += 1;
             return itera(endpoint, options, idFile);
         } else{
-            const zip = await generateZipForPath(`${idFile}`);
-            return zip;
+            let aux = await generateZipForPath(`${idFile}`);
+            return idFile;
         }
     }).catch(error => {
         console.log(error)
@@ -100,8 +100,8 @@ const itera = (endpoint,options, idFile) => {
 };
 
 const getBulk = async (endpoint,options) => {
-    let file = await itera(endpoint,options);
-    return file;
+    let idFile = await itera(endpoint,options);
+    return idFile;
 }
 module.exports = {
     fetchData,
