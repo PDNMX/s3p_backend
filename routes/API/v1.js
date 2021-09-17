@@ -1,19 +1,14 @@
-var express = require('express');
-var cors = require('cors');
-
-var router = express.Router();
-
-var corsOptions = {
+import {deleteFiles} from "../utils/generateZipForPath";
+const express = require('express');
+const cors = require('cors');
+const router = express.Router();
+const corsOptions = {
     origin: '*'
 }
-router.use(cors(corsOptions));
-
 const endpoints = require('../../endpoints.json');
 const rest_data = require('./rest_data');
 const graphql_data = require('./graphql_data');
 const formatter = require('./data_transformation');
-const {Errback} = require("express-serve-static-core");
-const fs = require("fs");
 
 let makeFiltros = (body) => {
     const params = [
@@ -34,6 +29,8 @@ let makeFiltros = (body) => {
     }
     return query;
 }
+
+router.use(cors(corsOptions));
 
 router.post('/entities', (req, res) => {
     // entidades de uno o más proveedores de información
@@ -204,38 +201,46 @@ router.post('/search', (req, res) => {
 router.post('/downloadData', async (req, res) => {
     const {body} = req;
     const {supplier_id} = body;
-    let nameFileZip;
     let endpoint = endpoints.find(d => d.supplier_id === supplier_id);
-    let options = {
-        pageSize: 200,
-        query: makeFiltros(body),
-        sort: body.sort,
-        page: 1
-    };
-
     try {
+        let nameFileZip, resultado;
+        let options = {
+            pageSize: 200,
+            query: makeFiltros(body),
+            sort: body.sort,
+            page: 1
+        };
+
         if (endpoint.type === 'REST') {
-            nameFileZip = await rest_data.getBulk(endpoint, options);
-            let pathZip = `./${nameFileZip}.zip`;
-            console.log(`pathFile: ${pathZip}`)
-            res.download(`./a08105e9-d80c-418d-9333-a28b4b4203b8.zip`, (Errback)=>{
-                if(Errback){
-                    console.log(Errback)
-                    console.log('un error')
-                }
-                console.log('termine');
-                fs.rmdirSync(`./${nameFileZip}`,{recursive:true});
-
-            });
+            resultado = await rest_data.itera(endpoint, options);
         } else if (endpoint.type === 'GRAPHQL') {
-            nameFileZip = await graphql_data.getBulk(endpoint, options);
+            resultado = await graphql_data.itera(endpoint, options);
         }
-        //res.status(200).send(zip)
-    } catch (error) {
-        console.error(error)
-        res.status(500).send("Error al generarl el bulk")
-    }
 
+        nameFileZip = resultado.idFile;
+
+        if (resultado.error) {
+            console.error(`Error generando bulk: ${resultado.error.message}`)
+            await deleteFiles(nameFileZip);
+            res.status(500).send({
+                "code": 500,
+                "message": "Error al generar el archivo"
+            })
+        } else {
+            res.download(`./${nameFileZip}.zip`, async(Errback) => {
+                if (Errback) {
+                    console.error(`Error: ${Errback}`);
+                }
+                await deleteFiles(nameFileZip);
+            });
+        }
+    } catch (error) {
+        console.error(`Error al generar el archivo: ${error.message}`)
+        res.status(500).send({
+            "code": 500,
+            "message": "Error al generar el archivo"
+        })
+    }
 });
 
 module.exports = router;

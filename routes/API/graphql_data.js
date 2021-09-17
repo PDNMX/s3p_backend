@@ -3,7 +3,7 @@ import {gql} from "apollo-boost";
 import 'cross-fetch/polyfill';
 const fs = require("fs");
 const {v4: uuidv4} = require('uuid');
-import generateZipForPath from "../utils/generateZipForPath";
+import {generateZipForPath} from "../utils/generateZipForPath";
 
 const fetchEntities = endpoint => {
     const client = new ApolloClient({
@@ -186,28 +186,28 @@ const itera = (endpoint,options, idFile) => {
         let {pagination, results} = res;
         let path = `./${idFile}/${endpoint.supplier_id}_${pagination.page}.json`;
         let data = JSON.stringify(results);
+
         fs.writeFileSync(path, data);
         let hasNextPage = (Math.trunc(pagination.totalRows / (pagination.pageSize * pagination.page)));
         if (hasNextPage > 0) {
             options.page += 1;
             return itera(endpoint, options, idFile);
         } else{
-            const zip = await generateZipForPath(`${idFile}`);
-            return zip;
+            let response = await generateZipForPath(`${idFile}`);
+            return response;
         }
     }).catch(error => {
-        console.log(error)
-        return null;
+        return {
+            "error": error,
+            "idFile": idFile
+        };
     });
 };
 
-const getBulk = async (endpoint,options) => {
-    let data = await itera(endpoint,options);
-    return data;
-}
+
 
 module.exports = {
     fetchEntities,
     fetchData,
-    getBulk
+    itera
 };

@@ -2,8 +2,8 @@ const axios = require('axios');
 const qs = require('qs');
 const fs = require("fs");
 const {v4: uuidv4} = require('uuid');
-import generateZipForPath from "../utils/generateZipForPath";
-const {exec} = require("child_process");
+import {generateZipForPath} from "../utils/generateZipForPath";
+
 //En caso de error regresa un arreglo vacio para no interrumpir el flujo de las demás promises
 const fetchEntities = endpoint => {
     return getToken(endpoint).then(token_data => {
@@ -75,36 +75,34 @@ const getToken = endpoint => {
     return axios(opts);
 };
 
-const itera = (endpoint,options, idFile) => {
-    if(!idFile){
+const itera = (endpoint, options, idFile) => {
+    if (!idFile) {
         idFile = uuidv4();
         fs.mkdirSync(`./${idFile}`);
     }
-    return fetchData(endpoint, options).then( async(res) => {
+    return fetchData(endpoint, options).then(async (res) => {
         let {pagination, results} = res;
         let path = `./${idFile}/${endpoint.supplier_id}_${pagination.page}.json`;
         let data = JSON.stringify(results);
+
         fs.writeFileSync(path, data);
-        let hasNextPage = (Math.trunc(pagination.totalRows / (pagination.pageSize * pagination.page)));
-        if (pagination.hasNextPage || hasNextPage > 0) {
+        if (pagination.hasNextPage) {
             options.page += 1;
             return itera(endpoint, options, idFile);
-        } else{
-            let aux = await generateZipForPath(`${idFile}`);
-            return idFile;
+        } else {
+            let response = await generateZipForPath(`${idFile}`);
+            return response;
         }
     }).catch(error => {
-        console.log(error)
-        return null;
+        return {
+            "error": error,
+            "idFile": idFile
+        };
     });
 };
 
-const getBulk = async (endpoint,options) => {
-    let idFile = await itera(endpoint,options);
-    return idFile;
-}
 module.exports = {
     fetchData,
     fetchEntities,
-    getBulk
+    itera
 };

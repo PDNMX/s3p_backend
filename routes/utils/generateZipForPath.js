@@ -1,6 +1,10 @@
 import fs from "fs";
 const JSZip = require("jszip");
 
+const deleteFiles = (nameFileZip) =>{
+    fs.rmdirSync(`./${nameFileZip}`, {recursive: true});
+    fs.rmdirSync(`./${nameFileZip}.zip`, {recursive: true});
+}
 
 const addFilesFromDirectoryToZip = (directoryPath = "", zip) => {
     const directoryContents = fs.readdirSync(directoryPath, {
@@ -20,17 +24,27 @@ const addFilesFromDirectoryToZip = (directoryPath = "", zip) => {
     });
 };
 
-export default async (directoryPath = "") => {
-    const zip = new JSZip();
-    addFilesFromDirectoryToZip(directoryPath, zip);
-
-    await zip.generateNodeStream({type:'nodebuffer',streamFiles:true})
-        .pipe(fs.createWriteStream(directoryPath+'.zip'))
-        .on('finish', function () {
-            // JSZip generates a readable stream with a "end" event,
-            // but is piped here in a writable stream which emits a "finish" event.
-            console.log(`${directoryPath}.zip written`);
-            return directoryPath;
-        });
+const generateZipForPath = (directoryPath = "") => {
+    return new Promise((resolve, reject)=>{
+        const zip = new JSZip();
+        addFilesFromDirectoryToZip(directoryPath, zip);
+        zip.generateNodeStream({type:'nodebuffer',streamFiles:true})
+            .pipe(fs.createWriteStream(directoryPath+'.zip'))
+            .on('finish', function () {
+                resolve({
+                    "idFile": directoryPath
+                });
+            })
+            .on('error', function(error){
+                reject({
+                    "error": error,
+                    "idFile": directoryPath
+                });
+            });
+    })
 };
 
+module.exports = {
+    generateZipForPath,
+    deleteFiles
+}
