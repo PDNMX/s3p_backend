@@ -66,3 +66,4 @@ typings/
 #endpoints
 endpoints.json
 package-lock.json
+yarn.lock

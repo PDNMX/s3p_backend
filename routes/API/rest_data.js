@@ -33,7 +33,8 @@ const fetchData = (endpoint, options) => {
             url: endpoint.url,
             method: 'POST',
             headers: {
-                'Authorization': 'Bearer ' + access_token
+                'Authorization': 'Bearer ' + access_token,
+                'Content-Type': 'application/json',
             },
             data: options,
             json: true,
