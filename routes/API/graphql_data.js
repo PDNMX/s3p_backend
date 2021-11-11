@@ -31,7 +31,7 @@ const fetchEntities = endpoint => {
             });
             resolve(entities);
         }).catch(e => {
-            console.log(e);
+            console.log(`fetchEntities-error= supplier_id: ${endpoint.supplier_id}  error: ${e.message}`);
             resolve([])
         })
     })
@@ -164,7 +164,7 @@ const fetchData = (endpoint, options) => {
             };
             resolve(data);
         }).catch(e => {
-            console.log("Error",e);
+            console.log(`fetchData-error= supplier_id: ${endpoint.supplier_id}  error: ${e.message}`);
             reject(e)
         });
     });
