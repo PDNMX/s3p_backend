@@ -151,7 +151,8 @@ const fetchData = (endpoint, options) => {
 
     return new Promise((resolve, reject) => {
         return axios(opts).then(response => {
-            const {data} = response;
+            const data = {};
+            data.results = response.data.data.results;
             data.supplier_name = endpoint.supplier_name;
             data.supplier_id = endpoint.supplier_id;
             data.levels = endpoint.levels;
@@ -159,11 +160,11 @@ const fetchData = (endpoint, options) => {
             data.pagination = {
                 pageSize: pageSize,
                 page: page,
-                totalRows: parseInt(data.total)
+                totalRows: parseInt(response.data.data.total)
             };
             resolve(data);
         }).catch(e => {
-            console.log("Error: ", e);
+            console.log("Error",e);
             reject(e)
         });
     });

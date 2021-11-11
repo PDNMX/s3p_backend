@@ -189,8 +189,8 @@ router.post('/search', (req, res) => {
             });
         });
     } else if (endpoint.type === 'GRAPHQL'){
-        graphql_data.fetchData(endpoint, options).then(data => {
-            res.json(formatter.sfp(data));
+        graphql_data.fetchData(endpoint, options).then(response => {
+            res.json(formatter.sfp(response));
         }).catch( e => {
             console.log(e);
             res.status(500).json({
