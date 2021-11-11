@@ -192,7 +192,7 @@ router.post('/search', (req, res) => {
         graphql_data.fetchData(endpoint, options).then(response => {
             res.json(formatter.sfp(response));
         }).catch( e => {
-            console.log(e);
+            console.log(`searchError= endpoint: ${endpoint.supplier_id}  error: ${e.message}`);
             res.status(500).json({
                 error: "Algo salio mal"
             });
