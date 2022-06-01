@@ -148,4 +148,89 @@ router.get('/getResolucionesAnualesDependencia', cors(), (req, res) => {
         })
 });
 
+router.get('/getTotalRows', cors(), (req, res) => {
+    const client = new Client(connectionData);
+    client.connect();
+
+    const query = "select count(*) from proveedores_sancionados";
+
+    client.query(query).then(response => {
+        res.status(200).json({
+            "status": 200,
+            "data": response.rows
+        });
+        client.end();
+    }).catch(err => {
+        console.log("Error : ", err);
+        res.status(500).json({
+            "status": 400,
+            "mensaje": "Error al consultar BD"
+        });
+        client.end();
+    });
+})
+
+router.get('/getTotalDependencias', cors(), (req, res) => {
+    const client = new Client(connectionData);
+    client.connect();
+
+    const query = "select count(*) from (select dependencia from proveedores_sancionados group by dependencia) as dependencias";
+
+    client.query(query).then(response => {
+        res.status(200).json({
+            "status": 200,
+            "data": response.rows
+        });
+        client.end();
+    }).catch(err => {
+        console.log("Error : ", err);
+        res.status(500).json({
+            "status": 400,
+            "mensaje": "Error al consultar BD"
+        });
+        client.end();
+    });
+})
+router.get('/getTotalProveedores', cors(), (req, res) => {
+    const client = new Client(connectionData);
+    client.connect();
+
+    const query = "select count(*) from (select proveedor_o_contratista from proveedores_sancionados group by proveedor_o_contratista) as proveedores";
+
+    client.query(query).then(response => {
+        res.status(200).json({
+            "status": 200,
+            "data": response.rows
+        });
+        client.end();
+    }).catch(err => {
+        console.log("Error : ", err);
+        res.status(500).json({
+            "status": 400,
+            "mensaje": "Error al consultar BD"
+        });
+        client.end();
+    });
+})
+router.get('/getTotalMultas', cors(), (req, res) => {
+    const client = new Client(connectionData);
+    client.connect();
+
+    const query = "select SUM(CAST(monto AS DOUBLE PRECISION)) as total from proveedores_sancionados WHERE MONTO != ''";
+
+    client.query(query).then(response => {
+        res.status(200).json({
+            "status": 200,
+            "data": response.rows
+        });
+        client.end();
+    }).catch(err => {
+        console.log("Error : ", err);
+        res.status(500).json({
+            "status": 400,
+            "mensaje": "Error al consultar BD"
+        });
+        client.end();
+    });
+})
 module.exports = router;
